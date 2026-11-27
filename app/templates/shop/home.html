@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% from "partials/_product_card.html" import product_card %}
+
+{% block title %}Horloges & wearables{% endblock %}
+
+{% block content %}
+  {# ---- Hero ------------------------------------------------------------- #}
+  <section class="relative -mx-4 overflow-hidden bg-gradient-to-b from-ink-850 to-ink-950 sm:mx-0 sm:mt-6 sm:rounded-[2rem] sm:ring-1 sm:ring-inset sm:ring-white/5">
+    <div class="grid items-center gap-4 px-6 pb-10 pt-6 sm:px-10 md:grid-cols-2 md:gap-10 md:py-16 lg:px-16">
+      <div class="order-2 md:order-1">
+        <p class="eyebrow">Nieuwe collectie {{ current_year }}</p>
+        <h1 class="mt-4 text-[2.6rem] font-semibold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-6xl">
+          Tijd, <span class="text-gold-400">op jouw manier.</span>
+        </h1>
+        <p class="mt-5 max-w-md text-base leading-relaxed text-zinc-400 sm:text-lg">
+          Horloges en wearables, ontworpen en gemaakt in Nederland. Voor elke dag, elke training en elk moment dat telt.
+        </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <a href="{{ url_for('shop.products') }}" class="btn-primary">
+            Bekijk de collectie {{ icon('arrow-right', 'h-4 w-4') }}
+          </a>
+          <a href="{{ url_for('shop.products', categorie='smartwatch') }}" class="btn-secondary">Ontdek smartwatches</a>
+        </div>
+      </div>
+      <div class="order-1 md:order-2">
+        <img src="{{ url_for('static', filename='img/hero.svg') }}" alt="Meridian Automatic horloge met zwarte wijzerplaat en gouden kast"
+             class="hero-image mx-auto w-full max-w-[18rem] rounded-[2rem] sm:max-w-sm md:max-w-md">
+      </div>
+    </div>
+  </section>
+
+  {# ---- Categories -------------------------------------------------------- #}
+  <section class="mt-12 md:mt-20" aria-labelledby="categorieen">
+    <p class="eyebrow">Assortiment</p>
+    <h2 id="categorieen" class="section-title">Shop per categorie</h2>
+
+    <div class="mt-5 grid gap-3 sm:grid-cols-3 sm:gap-5">
+      {% for cat in categories %}
+        <a href="{{ url_for('shop.products', categorie=cat.slug) }}"
+           class="card group flex items-center gap-4 overflow-hidden p-3 transition hover:ring-gold-500/30 active:scale-[.99] sm:block sm:p-0">
+          <div class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl sm:aspect-[4/3] sm:h-auto sm:w-full sm:rounded-none">
+            <img src="{{ url_for('static', filename=cat.image) }}" alt="" loading="lazy"
+                 class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]">
+          </div>
+          <div class="flex-1 sm:p-6">
+            <h3 class="font-semibold text-white sm:text-lg">{{ cat.label }}</h3>
+            <p class="mt-0.5 text-sm text-zinc-500">{{ cat.tagline }}</p>
+            <span class="mt-4 hidden items-center gap-1.5 rounded-full bg-gold-500/10 px-4 py-2 text-sm font-medium text-gold-400 ring-1 ring-inset ring-gold-500/20 transition group-hover:bg-gold-500 group-hover:text-ink-950 sm:inline-flex">
+              Bekijk {{ cat.short }} {{ icon('arrow-right', 'h-4 w-4') }}
+            </span>
+          </div>
+          <span class="text-zinc-600 sm:hidden">{{ icon('chevron-right', 'h-5 w-5') }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ---- Featured products ------------------------------------------------- #}
+  <section class="mt-14 md:mt-20" aria-labelledby="uitgelicht">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <p class="eyebrow">Uitgelicht</p>
+        <h2 id="uitgelicht" class="section-title">Onze favorieten</h2>
+      </div>
+      <a href="{{ url_for('shop.products') }}" class="flex shrink-0 items-center gap-1 text-sm font-medium text-gold-400 hover:text-gold-300">
+        Alles bekijken {{ icon('chevron-right', 'h-4 w-4') }}
+      </a>
+    </div>
+
+    {% if featured %}
+      <div class="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 lg:grid-cols-4">
+        {% for product in featured %}{{ product_card(product) }}{% endfor %}
+      </div>
+    {% else %}
+      <p class="card mt-5 p-6 text-sm text-zinc-400">Er zijn nog geen uitgelichte producten. Voer <code class="text-gold-400">python seed.py</code> uit om voorbeelddata te laden.</p>
+    {% endif %}
+  </section>
+
+  {# ---- Brand promises ---------------------------------------------------- #}
+  <section class="card mt-14 grid gap-5 p-6 sm:grid-cols-3 sm:p-8 md:mt-20" aria-label="Waarom Time Square">
+    {% for icon_name, title, text in [
+      ('truck', 'Gratis verzending vanaf € 50', 'Op werkdagen voor 22:00 besteld, morgen in huis.'),
+      ('shield', '2 jaar garantie', 'Op alle horloges en wearables van eigen ontwerp.'),
+      ('sparkle', 'Ontworpen in Nederland', 'Van eerste schets tot laatste schroefje.'),
+    ] %}
+      <div class="flex items-start gap-4">
+        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gold-500/10 text-gold-400">{{ icon(icon_name, 'h-5 w-5') }}</span>
+        <div>
+          <h3 class="text-sm font-semibold text-white">{{ title }}</h3>
+          <p class="mt-1 text-sm text-zinc-500">{{ text }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+{% endblock %}

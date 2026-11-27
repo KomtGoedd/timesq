@@ -1,0 +1,53 @@
+{% extends "admin/_layout.html" %}
+{% from "partials/_icons.html" import icon %}
+
+{% block title %}Producten beheren{% endblock %}
+{% block admin_title %}Producten{% endblock %}
+{% block admin_actions %}
+  <a href="{{ url_for('admin.product_create') }}" class="btn-primary py-2.5">{{ icon('plus', 'h-4 w-4') }} Nieuw product</a>
+{% endblock %}
+
+{% block admin_content %}
+  <p class="mb-3 text-sm text-zinc-500">{{ products|length }} producten</p>
+  <ul class="list-group">
+    {% for product in products %}
+      <li class="flex items-center gap-3 px-4 py-3 sm:gap-4 sm:px-5 {{ 'opacity-50' if not product.is_active }}">
+        <img src="{{ product.image_url|image_src }}" alt="" class="h-14 w-14 shrink-0 rounded-xl bg-ink-850 object-cover">
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="truncate font-medium text-white hover:text-gold-300">{{ product.name }}</a>
+            {% if product.featured %}<span class="inline-flex items-center gap-1 rounded-full bg-gold-500/10 px-2 py-0.5 text-[11px] font-medium text-gold-400">{{ icon('star', 'h-3 w-3') }} Uitgelicht</span>{% endif %}
+            {% if not product.is_active %}<span class="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[11px] font-medium text-zinc-400">{{ icon('eye-off', 'h-3 w-3') }} Verborgen</span>{% endif %}
+          </div>
+          <p class="mt-0.5 truncate text-xs text-zinc-500">
+            {{ product.category_label }} · {{ product.price|euro }} ·
+            <span class="{{ 'text-red-300' if product.stock == 0 else 'text-amber-300' if product.stock <= low_stock_threshold else 'text-zinc-400' }}">
+              {{ product.stock }} op voorraad
+            </span>
+          </p>
+        </div>
+        <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="grid h-10 w-10 place-items-center rounded-full text-zinc-400 hover:bg-white/5 hover:text-white" aria-label="{{ product.name }} bewerken">
+          {{ icon('pencil', 'h-5 w-5') }}
+        </a>
+        <form method="post" action="{{ url_for('admin.product_delete', product_id=product.id) }}"
+              data-confirm="Weet je zeker dat je '{{ product.name }}' wilt verwijderen?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="grid h-10 w-10 place-items-center rounded-full text-zinc-500 hover:bg-red-500/10 hover:text-red-300" aria-label="{{ product.name }} verwijderen">
+            {{ icon('trash', 'h-5 w-5') }}
+          </button>
+        </form>
+      </li>
+    {% else %}
+      <li class="px-5 py-8 text-center text-sm text-zinc-400">Nog geen producten. Voeg je eerste product toe.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    // Ask for confirmation before deleting.
+    document.querySelectorAll('form[data-confirm]').forEach((form) =>
+      form.addEventListener('submit', (event) => { if (!confirm(form.dataset.confirm)) event.preventDefault(); })
+    );
+  </script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "admin/_layout.html" %}
+{% from "partials/_icons.html" import icon %}
+{% from "partials/_forms.html" import field, checkbox %}
+
+{% set heading = "Product bewerken" if product else "Nieuw product" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block admin_title %}{{ heading }}{% endblock %}
+
+{% block admin_content %}
+  <a href="{{ url_for('admin.products') }}" class="-ml-2 mb-4 inline-flex items-center gap-1 rounded-full py-2 pl-1 pr-3 text-sm font-medium text-gold-400 active:bg-white/5">
+    {{ icon('chevron-left', 'h-5 w-5') }} Alle producten
+  </a>
+
+  <form method="post" novalidate class="grid gap-6 md:grid-cols-[1fr_300px] md:gap-10">
+    {{ form.hidden_tag() }}
+    <div class="card space-y-4 p-5 sm:p-6">
+      {{ field(form.name, placeholder='Bijv. Meridian Automatic') }}
+      {{ field(form.description, rows=6, placeholder='Materialen, uurwerk, formaat, …') }}
+      <div class="grid grid-cols-2 gap-3">
+        {{ field(form.price, inputmode='decimal', placeholder='49,95') }}
+        {{ field(form.stock, type='number', min=0, inputmode='numeric') }}
+      </div>
+      {{ field(form.category) }}
+      {{ field(form.image_url, placeholder='img/products/naam.svg of https://…', hint='Laat leeg voor de standaardafbeelding van de categorie.') }}
+      <div class="grid gap-3 sm:grid-cols-2">
+        {{ checkbox(form.is_active, 'Uit = verborgen voor klanten.') }}
+        {{ checkbox(form.featured, 'Maximaal 4 op de homepage.') }}
+      </div>
+    </div>
+
+    <aside class="space-y-4">
+      {% if product %}
+        <div class="card overflow-hidden">
+          <img src="{{ product.image_url|image_src }}" alt="{{ product.name }}" class="aspect-square w-full object-cover">
+          <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="block px-4 py-3 text-center text-sm font-medium text-gold-400 hover:text-gold-300 {{ 'pointer-events-none opacity-40' if not product.is_active }}">
+            Bekijk in de winkel
+          </a>
+        </div>
+      {% endif %}
+      <button type="submit" class="btn-primary w-full">{{ 'Wijzigingen opslaan' if product else 'Product toevoegen' }}</button>
+      <a href="{{ url_for('admin.products') }}" class="btn-secondary w-full">Annuleren</a>
+    </aside>
+  </form>
+
+  {% if product %}
+    <form method="post" action="{{ url_for('admin.product_delete', product_id=product.id) }}" class="mt-8"
+          data-confirm="Weet je zeker dat je '{{ product.name }}' wilt verwijderen?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn-danger">{{ icon('trash', 'h-4 w-4') }} Product verwijderen</button>
+      <p class="mt-2 text-xs text-zinc-500">Komt het product voor in bestellingen, dan wordt het verborgen in plaats van verwijderd.</p>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    document.querySelectorAll('form[data-confirm]').forEach((form) =>
+      form.addEventListener('submit', (event) => { if (!confirm(form.dataset.confirm)) event.preventDefault(); })
+    );
+  </script>
+{% endblock %}

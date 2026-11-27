@@ -1,0 +1,71 @@
+{# Shared order UI: status badge, status tracker, item list, totals, address. #}
+{% from "partials/_icons.html" import icon %}
+
+{% set _status_style = {
+  'Ontvangen': 'bg-sky-400/10 text-sky-300 ring-sky-400/20',
+  'In behandeling': 'bg-amber-400/10 text-amber-300 ring-amber-400/20',
+  'Verzonden': 'bg-emerald-400/10 text-emerald-300 ring-emerald-400/20',
+} %}
+{% set _status_icon = {'Ontvangen': 'inbox', 'In behandeling': 'box', 'Verzonden': 'truck'} %}
+{% set _status_text = {
+  'Ontvangen': 'We hebben je bestelling ontvangen en gaan er snel mee aan de slag.',
+  'In behandeling': 'Je bestelling wordt ingepakt in ons atelier.',
+  'Verzonden': 'Je bestelling is onderweg naar je toe.',
+} %}
+
+{% macro status_badge(status) -%}
+  <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset {{ _status_style.get(status, 'bg-white/5 text-zinc-300 ring-white/10') }}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro status_tracker(order, statuses) -%}
+  {% set current = statuses.index(order.status) if order.status in statuses else 0 %}
+  <div>
+    <ol class="grid grid-cols-3" aria-label="Status van de bestelling">
+      {% for step in statuses %}
+        {% set reached = loop.index0 <= current %}
+        <li class="relative flex flex-col items-center text-center" {% if loop.index0 == current %}aria-current="step"{% endif %}>
+          {% if not loop.first %}
+            <span class="absolute right-1/2 top-5 h-0.5 w-full -translate-y-1/2 {{ 'bg-gold-500' if reached else 'bg-white/10' }}" aria-hidden="true"></span>
+          {% endif %}
+          <span class="relative z-10 grid h-10 w-10 place-items-center rounded-full {{ 'bg-gold-500 text-ink-950' if reached else 'bg-ink-800 text-zinc-500 ring-1 ring-inset ring-white/10' }}">
+            {{ icon(_status_icon[step], 'h-5 w-5') }}
+          </span>
+          <span class="mt-2 text-xs font-medium {{ 'text-white' if reached else 'text-zinc-500' }}">{{ step }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+    <p class="mt-4 text-center text-sm text-zinc-400">{{ _status_text.get(order.status, '') }}</p>
+  </div>
+{%- endmacro %}
+
+{% macro order_items(order) -%}
+  <ul class="divide-y divide-white/5">
+    {% for item in order.items %}
+      <li class="flex items-center gap-3 py-3">
+        <img src="{{ item.product.image_url|image_src }}" alt="" class="h-14 w-14 shrink-0 rounded-xl bg-ink-850 object-cover">
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-medium text-white">{{ item.product_name }}</p>
+          <p class="text-xs text-zinc-500">{{ item.quantity }} × {{ item.unit_price|euro }}</p>
+        </div>
+        <p class="text-sm font-medium text-zinc-200">{{ item.line_total|euro }}</p>
+      </li>
+    {% endfor %}
+  </ul>
+{%- endmacro %}
+
+{% macro totals(subtotal, shipping, total) -%}
+  <dl class="space-y-2.5 text-sm">
+    <div class="flex justify-between text-zinc-400"><dt>Subtotaal</dt><dd class="text-zinc-200">{{ subtotal|euro }}</dd></div>
+    <div class="flex justify-between text-zinc-400">
+      <dt>Verzendkosten</dt>
+      <dd class="{{ 'font-medium text-emerald-300' if shipping == 0 else 'text-zinc-200' }}">{{ 'Gratis' if shipping == 0 else shipping|euro }}</dd>
+    </div>
+    <div class="flex justify-between border-t border-white/10 pt-3 text-base font-semibold text-white"><dt>Totaal</dt><dd>{{ total|euro }}</dd></div>
+  </dl>
+{%- endmacro %}
+
+{% macro address(order) -%}
+  <address class="text-sm not-italic leading-relaxed text-zinc-300">
+    {{ order.shipping_name }}<br>{{ order.shipping_street }}<br>{{ order.shipping_postal_code }} {{ order.shipping_city }}
+  </address>
+{%- endmacro %}

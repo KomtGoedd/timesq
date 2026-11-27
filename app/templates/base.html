@@ -1,0 +1,121 @@
+{% from "partials/_icons.html" import icon, logo %}
+<!doctype html>
+<html lang="nl" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}{% endblock %} · Time Square</title>
+  <meta name="description" content="Time Square ontwerpt en maakt horloges, smartwatches en accessoires in Nederland.">
+
+  {# App-like behaviour on phones: installable, full screen, dark status bar #}
+  <meta name="theme-color" content="#0B0B0C">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Time Square">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/icon.svg') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icon-180.png') }}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: { 950: '#0B0B0C', 900: '#121214', 850: '#18181B', 800: '#1F1F23', 700: '#2A2A2F', 600: '#3A3A40' },
+            gold: { 300: '#E7C873', 400: '#D4B04A', 500: '#C9A227', 600: '#A8861C' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn-primary { @apply inline-flex whitespace-nowrap items-center justify-center gap-2 rounded-full bg-gold-500 px-6 py-3.5 text-sm font-semibold text-ink-950 transition hover:bg-gold-400 active:scale-[.98] disabled:cursor-not-allowed disabled:bg-ink-700 disabled:text-zinc-500 disabled:active:scale-100; }
+      .btn-secondary { @apply inline-flex whitespace-nowrap items-center justify-center gap-2 rounded-full bg-white/5 px-6 py-3.5 text-sm font-semibold text-zinc-100 ring-1 ring-inset ring-white/10 transition hover:bg-white/10 active:scale-[.98]; }
+      .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.28em] text-gold-400; }
+      .section-title { @apply mt-1.5 text-2xl font-semibold tracking-tight text-white sm:text-3xl; }
+      .card { @apply rounded-3xl bg-ink-900 ring-1 ring-inset ring-white/5; }
+      .nav-link { @apply text-sm text-zinc-400 transition hover:text-white; }
+      .nav-link-active { @apply text-white; }
+      .input { @apply block w-full rounded-2xl bg-ink-850 px-4 py-3.5 text-[15px] text-white ring-1 ring-inset ring-white/10 transition placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-gold-500; }
+      .input-error { @apply ring-red-500/70; }
+      .label { @apply mb-1.5 block text-sm font-medium text-zinc-300; }
+      .btn-danger { @apply inline-flex whitespace-nowrap items-center justify-center gap-2 rounded-full bg-red-500/10 px-5 py-3 text-sm font-semibold text-red-300 ring-1 ring-inset ring-red-500/20 transition hover:bg-red-500/20; }
+      .list-group { @apply divide-y divide-white/5 overflow-hidden rounded-3xl bg-ink-900 ring-1 ring-inset ring-white/5; }
+      .list-row { @apply flex w-full items-center gap-3 px-5 py-4 text-left text-sm transition hover:bg-white/[.03] active:bg-white/5; }
+    }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="min-h-full bg-ink-950 font-sans text-zinc-100 antialiased selection:bg-gold-500/30">
+  {# ---- Top bar ---------------------------------------------------------- #}
+  <header class="app-header sticky top-0 z-40 border-b border-white/5 bg-ink-950/80 backdrop-blur-xl">
+    <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-16 lg:px-8">
+      <a href="{{ url_for('shop.home') }}" class="flex items-center gap-2.5" aria-label="Time Square, naar de homepage">
+        {{ logo('h-7 w-7') }}
+        <span class="text-[13px] font-semibold tracking-[0.32em] text-white">TIME SQUARE</span>
+      </a>
+
+      <nav class="hidden items-center gap-8 md:flex" aria-label="Hoofdmenu">
+        <a href="{{ url_for('shop.home') }}" class="nav-link {{ 'nav-link-active' if active_tab == 'home' }}">Home</a>
+        {% for cat in categories %}
+          <a href="{{ url_for('shop.products', categorie=cat.slug) }}" class="nav-link">{{ cat.label }}</a>
+        {% endfor %}
+      </nav>
+
+      <div class="flex items-center gap-1">
+        <a href="{{ url_for('shop.products', _anchor='zoeken') }}" class="rounded-full p-2.5 text-zinc-300 transition hover:bg-white/5 hover:text-white" aria-label="Zoeken">
+          {{ icon('search', 'h-5 w-5') }}
+        </a>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+          <a href="{{ url_for('admin.orders') }}" class="mr-1 hidden rounded-full bg-gold-500/10 px-3.5 py-1.5 text-xs font-semibold text-gold-400 ring-1 ring-inset ring-gold-500/20 hover:bg-gold-500/20 md:block">Beheer</a>
+        {% endif %}
+        <a href="{{ url_for('account.overview') if current_user.is_authenticated else url_for('auth.login') }}" class="hidden rounded-full p-2.5 text-zinc-300 transition hover:bg-white/5 hover:text-white md:block" aria-label="Account">
+          {{ icon('user', 'h-5 w-5') }}
+        </a>
+        <a href="{{ url_for('cart.view_cart') }}" class="relative hidden rounded-full p-2.5 text-zinc-300 transition hover:bg-white/5 hover:text-white md:block" aria-label="Winkelmand, {{ cart_count }} artikelen">
+          {{ icon('bag', 'h-5 w-5') }}
+          {% if cart_count %}<span class="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-gold-500 px-1 text-[10px] font-bold text-ink-950">{{ cart_count }}</span>{% endif %}
+        </a>
+      </div>
+    </div>
+  </header>
+
+  {% include "partials/_flash.html" %}
+
+  <main class="app-main mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  {# ---- Footer (desktop only; on phones the tab bar takes over) ---------- #}
+  <footer class="mt-24 hidden border-t border-white/5 md:block">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-8 py-10 text-sm text-zinc-500">
+      <div class="flex items-center gap-2.5">{{ logo('h-5 w-5') }}<span>© {{ current_year }} Time Square · Ontworpen in Nederland</span></div>
+      <p>Gratis verzending vanaf € 50 · 2 jaar garantie</p>
+    </div>
+  </footer>
+
+  {% include "partials/_tabbar.html" %}
+
+  <script>
+    // Auto-dismiss toasts after a few seconds; the close button works immediately.
+    document.querySelectorAll('[data-toast]').forEach((toast) => {
+      const close = () => { toast.classList.add('is-leaving'); setTimeout(() => toast.remove(), 300); };
+      toast.querySelector('[data-toast-close]')?.addEventListener('click', close);
+      setTimeout(close, 4500);
+    });
+    // Register the service worker so the shop can be installed as an app.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

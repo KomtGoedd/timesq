@@ -1,0 +1,28 @@
+{# Bottom tab bar, as in native iOS / Android apps. Hidden from md and up. #}
+{% from "partials/_icons.html" import icon %}
+{% set tabs = [
+  ('home', 'Home', url_for('shop.home'), 'home'),
+  ('shop', 'Shop', url_for('shop.products'), 'grid'),
+  ('cart', 'Mand', url_for('cart.view_cart'), 'bag'),
+  ('account', 'Account', url_for('account.overview') if current_user.is_authenticated else url_for('auth.login'), 'user'),
+] %}
+<nav class="tabbar fixed inset-x-0 bottom-0 z-50 border-t border-white/5 bg-ink-950/85 backdrop-blur-xl md:hidden" aria-label="Hoofdnavigatie">
+  <ul class="mx-auto grid max-w-md grid-cols-4">
+    {% for key, label, href, icon_name in tabs %}
+      {% set is_active = active_tab == key %}
+      <li>
+        <a href="{{ href }}"
+           class="relative flex flex-col items-center gap-1 pb-1.5 pt-2.5 text-[11px] font-medium transition {{ 'text-gold-400' if is_active else 'text-zinc-500 active:text-zinc-300' }}"
+           {% if is_active %}aria-current="page"{% endif %}>
+          <span class="relative">
+            {{ icon(icon_name, 'h-6 w-6') }}
+            {% if key == 'cart' and cart_count %}
+              <span class="absolute -right-2.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-gold-500 px-1 text-[10px] font-bold text-ink-950">{{ cart_count }}</span>
+            {% endif %}
+          </span>
+          {{ label }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</nav>

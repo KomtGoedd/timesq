@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import logo %}
+{% from "partials/_forms.html" import field %}
+
+{% block title %}Account aanmaken{% endblock %}
+
+{% block content %}
+  <section class="mx-auto max-w-sm pt-10 md:pt-16">
+    <div class="text-center">
+      {{ logo('mx-auto h-12 w-12') }}
+      <h1 class="mt-5 text-2xl font-semibold tracking-tight text-white">Account aanmaken</h1>
+      <p class="mt-1 text-sm text-zinc-400">Sneller afrekenen en je bestellingen altijd bij de hand.</p>
+    </div>
+
+    <form method="post" novalidate class="mt-8 space-y-4">
+      {{ form.hidden_tag() }}
+      {{ field(form.name, autocomplete='name', placeholder='Voor- en achternaam', autofocus=True) }}
+      {{ field(form.email, type='email', autocomplete='email', inputmode='email', placeholder='naam@voorbeeld.nl') }}
+      {{ field(form.password, autocomplete='new-password', placeholder='Minimaal 8 tekens', hint='Minimaal 8 tekens.') }}
+      {{ field(form.password_confirm, autocomplete='new-password', placeholder='Nog een keer') }}
+      <button type="submit" class="btn-primary w-full">Account aanmaken</button>
+    </form>
+
+    <p class="mt-8 text-center text-sm text-zinc-400">
+      Heb je al een account?
+      <a href="{{ url_for('auth.login', next=request.args.get('next')) }}" class="font-medium text-gold-400 hover:text-gold-300">Inloggen</a>
+    </p>
+  </section>
+{% endblock %}

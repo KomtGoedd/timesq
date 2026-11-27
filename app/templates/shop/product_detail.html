@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% from "partials/_product_card.html" import product_card %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+  {# ---- Back button (mobile) / breadcrumb (desktop) ------------------------ #}
+  <nav class="flex items-center pt-3 md:pt-8" aria-label="Kruimelpad">
+    <a href="{{ url_for('shop.products', categorie=product.category) }}"
+       class="-ml-2 inline-flex items-center gap-1 rounded-full py-2 pl-1 pr-3 text-sm font-medium text-gold-400 active:bg-white/5 md:hidden">
+      {{ icon('chevron-left', 'h-5 w-5') }} {{ category.label if category else 'Shop' }}
+    </a>
+    <ol class="hidden items-center gap-2 text-sm text-zinc-500 md:flex">
+      <li><a href="{{ url_for('shop.products') }}" class="hover:text-white">Shop</a></li>
+      <li aria-hidden="true">{{ icon('chevron-right', 'h-3.5 w-3.5') }}</li>
+      <li><a href="{{ url_for('shop.products', categorie=product.category) }}" class="hover:text-white">{{ product.category_label }}</a></li>
+      <li aria-hidden="true">{{ icon('chevron-right', 'h-3.5 w-3.5') }}</li>
+      <li class="text-zinc-300" aria-current="page">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <article class="mt-2 grid gap-6 md:mt-6 md:grid-cols-2 md:gap-12 lg:gap-16">
+    {# ---- Photo ------------------------------------------------------------ #}
+    <div class="-mx-4 sm:mx-0">
+      <div class="relative aspect-square overflow-hidden bg-ink-900 sm:rounded-[2rem] sm:ring-1 sm:ring-inset sm:ring-white/5">
+        <img src="{{ product.image_url|image_src }}" alt="{{ product.name }}"
+             class="h-full w-full object-cover {{ 'opacity-60 grayscale-[40%]' if not product.in_stock }}">
+        {% if not product.in_stock %}
+          <span class="absolute left-4 top-4 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold text-zinc-200 backdrop-blur">Uitverkocht</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ---- Info + buy box ---------------------------------------------------- #}
+    <div class="md:sticky md:top-24 md:self-start">
+      <p class="eyebrow">{{ product.category_label }}</p>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white lg:text-4xl">{{ product.name }}</h1>
+      <p class="mt-3 text-2xl font-semibold text-gold-400">{{ product.price|euro }}</p>
+      <p class="mt-1 text-xs text-zinc-500">Inclusief btw · {{ 'gratis verzending' if product.price_cents >= config.FREE_SHIPPING_THRESHOLD_CENTS else 'gratis verzending vanaf € 50' }}</p>
+
+      {# Stock status #}
+      {% if not product.in_stock %}
+        {% set stock_dot, stock_text = 'bg-red-500', 'Niet op voorraad' %}
+      {% elif product.stock <= low_stock_threshold %}
+        {% set stock_dot, stock_text = 'bg-amber-400', 'Nog maar ' ~ product.stock ~ ' op voorraad' %}
+      {% else %}
+        {% set stock_dot, stock_text = 'bg-emerald-400', 'Op voorraad · morgen in huis' %}
+      {% endif %}
+      <p class="mt-5 inline-flex items-center gap-2 rounded-full bg-white/5 px-3.5 py-1.5 text-sm font-medium {{ 'text-red-300' if not product.in_stock else 'text-zinc-200' }}" data-testid="stock-status">
+        <span class="h-2 w-2 rounded-full {{ stock_dot }}"></span>{{ stock_text }}
+      </p>
+
+      <p class="mt-6 leading-relaxed text-zinc-400">{{ product.description }}</p>
+
+      {# Add to cart: disabled when out of stock. The server re-checks stock too (story 4). #}
+      <form method="post" action="{{ url_for('cart.add', product_id=product.id) }}" class="mt-8 flex gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="flex items-center rounded-full bg-ink-850 ring-1 ring-inset ring-white/10 {{ 'opacity-40' if not product.in_stock }}" data-stepper>
+          <button type="button" data-step="-1" class="grid h-12 w-11 place-items-center rounded-full text-zinc-300 hover:text-white disabled:text-zinc-600" aria-label="Eén minder" {{ 'disabled' if not product.in_stock }}>
+            {{ icon('minus', 'h-4 w-4') }}
+          </button>
+          <label for="aantal" class="sr-only">Aantal</label>
+          <input id="aantal" name="aantal" type="number" inputmode="numeric" value="1" min="1" max="{{ [product.stock, 1]|max }}"
+                 class="w-8 bg-transparent text-center text-sm font-semibold text-white [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                 {{ 'disabled' if not product.in_stock }}>
+          <button type="button" data-step="1" class="grid h-12 w-11 place-items-center rounded-full text-zinc-300 hover:text-white disabled:text-zinc-600" aria-label="Eén meer" {{ 'disabled' if not product.in_stock }}>
+            {{ icon('plus', 'h-4 w-4') }}
+          </button>
+        </div>
+        <button type="submit" class="btn-primary flex-1" {{ 'disabled' if not product.in_stock }}>
+          {% if product.in_stock %}{{ icon('bag', 'h-5 w-5') }} In winkelmand{% else %}Niet op voorraad{% endif %}
+        </button>
+      </form>
+
+      {% if in_cart %}
+        <a href="{{ url_for('cart.view_cart') }}" class="mt-3 flex items-center justify-center gap-1.5 text-sm text-zinc-400 hover:text-white">
+          {{ icon('check', 'h-4 w-4 text-gold-400') }} {{ in_cart }} in je winkelmand · <span class="font-medium text-gold-400">Bekijk winkelmand</span>
+        </a>
+      {% endif %}
+
+      <ul class="mt-8 divide-y divide-white/5 rounded-3xl bg-ink-900 text-sm ring-1 ring-inset ring-white/5">
+        {% for icon_name, text in [
+          ('truck', 'Gratis verzending vanaf € 50, anders € 4,95'),
+          ('shield', '2 jaar garantie op alle Time Square-producten'),
+          ('return', '30 dagen bedenktijd, gratis retour'),
+        ] %}
+          <li class="flex items-center gap-3 px-5 py-3.5 text-zinc-300">
+            <span class="text-gold-400">{{ icon(icon_name, 'h-5 w-5') }}</span>{{ text }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </article>
+
+  {# ---- Related products ----------------------------------------------------- #}
+  {% if related %}
+    <section class="mt-16 md:mt-24" aria-labelledby="meer">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <p class="eyebrow">Meer ontdekken</p>
+          <h2 id="meer" class="section-title">Meer {{ category.short if category else 'producten' }}</h2>
+        </div>
+        <a href="{{ url_for('shop.products', categorie=product.category) }}" class="flex shrink-0 items-center gap-1 text-sm font-medium text-gold-400 hover:text-gold-300">
+          Alles bekijken {{ icon('chevron-right', 'h-4 w-4') }}
+        </a>
+      </div>
+      <div class="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 lg:grid-cols-4">
+        {% for item in related %}{{ product_card(item) }}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    // Quantity stepper: keep the value between 1 and the available stock.
+    document.querySelectorAll('[data-stepper]').forEach((stepper) => {
+      const input = stepper.querySelector('input');
+      const clamp = (value) => Math.min(Math.max(value || 1, Number(input.min)), Number(input.max));
+      stepper.querySelectorAll('[data-step]').forEach((btn) =>
+        btn.addEventListener('click', () => { input.value = clamp(Number(input.value) + Number(btn.dataset.step)); })
+      );
+      input.addEventListener('change', () => { input.value = clamp(parseInt(input.value, 10)); });
+    });
+  </script>
+{% endblock %}

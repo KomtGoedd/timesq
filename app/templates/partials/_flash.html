@@ -1,0 +1,23 @@
+{# Flash messages rendered as app-style toasts. Categories: success, error, info. #}
+{% from "partials/_icons.html" import icon %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="toasts pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-2 px-4" aria-live="polite">
+      {% for category, message in messages %}
+        {% set tone = {
+          'success': 'ring-gold-500/40 text-white',
+          'error': 'ring-red-500/50 text-red-100',
+        }.get(category, 'ring-white/10 text-zinc-100') %}
+        {% set dot = {'success': 'bg-gold-500', 'error': 'bg-red-500'}.get(category, 'bg-zinc-400') %}
+        <div data-toast role="{{ 'alert' if category == 'error' else 'status' }}"
+             class="toast pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-ink-850/95 px-4 py-3 text-sm shadow-2xl shadow-black/50 ring-1 backdrop-blur-xl {{ tone }}">
+          <span class="h-2 w-2 shrink-0 rounded-full {{ dot }}"></span>
+          <p class="flex-1">{{ message }}</p>
+          <button type="button" data-toast-close class="-mr-1 rounded-full p-1 text-zinc-400 hover:text-white" aria-label="Melding sluiten">
+            {{ icon('x', 'h-4 w-4') }}
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

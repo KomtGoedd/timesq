@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% from "partials/_order.html" import totals %}
+
+{% block title %}Winkelmand{% endblock %}
+
+{% block content %}
+  <header class="pt-6 md:pt-10">
+    <p class="eyebrow">Winkelmand</p>
+    <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-white md:text-4xl">Je winkelmand</h1>
+  </header>
+
+  {% if not summary.lines %}
+    <div class="card mx-auto mt-10 max-w-md p-8 text-center">
+      <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gold-500/10 text-gold-400">{{ icon('bag', 'h-6 w-6') }}</span>
+      <h2 class="mt-5 text-lg font-semibold text-white">Je winkelmand is leeg</h2>
+      <p class="mt-1 text-sm text-zinc-400">Ontdek onze horloges, smartwatches en accessoires.</p>
+      <a href="{{ url_for('shop.products') }}" class="btn-primary mt-6">Ga shoppen {{ icon('arrow-right', 'h-4 w-4') }}</a>
+    </div>
+  {% else %}
+    <div class="mt-6 grid gap-6 md:grid-cols-[1fr_360px] md:gap-10">
+      {# ---- Lines -------------------------------------------------------------- #}
+      <ul class="divide-y divide-white/5" aria-label="Producten in je winkelmand">
+        {% for line in summary.lines %}
+          {% set product = line.product %}
+          <li class="flex gap-4 py-4 first:pt-0">
+            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-ink-900 ring-1 ring-inset ring-white/5 sm:h-28 sm:w-28">
+              <img src="{{ product.image_url|image_src }}" alt="{{ product.name }}" class="h-full w-full object-cover">
+            </a>
+            <div class="flex min-w-0 flex-1 flex-col">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="truncate text-[11px] uppercase tracking-wider text-zinc-500">{{ product.category_label }}</p>
+                  <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="line-clamp-2 font-medium text-white hover:text-gold-300">{{ product.name }}</a>
+                  <p class="mt-0.5 text-xs text-zinc-500">{{ product.price|euro }} per stuk</p>
+                </div>
+                <p class="shrink-0 font-semibold text-gold-400" data-testid="line-total">{{ line.line_total|euro }}</p>
+              </div>
+
+              <div class="mt-auto flex items-center justify-between gap-3 pt-3">
+                {# Quantity stepper: each button submits the new quantity. #}
+                <form method="post" action="{{ url_for('cart.update', product_id=product.id) }}"
+                      class="flex items-center rounded-full bg-ink-850 ring-1 ring-inset ring-white/10">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button name="aantal" value="{{ line.quantity - 1 }}" class="grid h-10 w-10 place-items-center rounded-full text-zinc-300 hover:text-white"
+                          aria-label="{{ 'Verwijder' if line.quantity == 1 else 'Eén minder' }} {{ product.name }}">
+                    {{ icon('trash' if line.quantity == 1 else 'minus', 'h-4 w-4') }}
+                  </button>
+                  <span class="w-7 text-center text-sm font-semibold text-white" aria-label="Aantal">{{ line.quantity }}</span>
+                  <button name="aantal" value="{{ line.quantity + 1 }}" class="grid h-10 w-10 place-items-center rounded-full text-zinc-300 hover:text-white disabled:text-zinc-700"
+                          aria-label="Eén meer {{ product.name }}" {{ 'disabled' if line.at_max }}>
+                    {{ icon('plus', 'h-4 w-4') }}
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('cart.remove', product_id=product.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="text-sm text-zinc-500 underline-offset-4 hover:text-red-300 hover:underline">Verwijderen</button>
+                </form>
+              </div>
+              {% if line.at_max %}<p class="mt-2 text-xs text-amber-300">Maximaal beschikbaar: {{ product.stock }}</p>{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {# ---- Summary --------------------------------------------------------------- #}
+      <aside class="card h-fit p-6 md:sticky md:top-24" aria-label="Overzicht">
+        <h2 class="mb-4 font-semibold text-white">Overzicht · {{ summary.item_count }} {{ 'artikel' if summary.item_count == 1 else 'artikelen' }}</h2>
+
+        {% if summary.shipping_cents %}
+          <div class="mb-5 rounded-2xl bg-gold-500/5 p-4 ring-1 ring-inset ring-gold-500/15">
+            <p class="text-sm text-zinc-300">Nog <span class="font-semibold text-gold-400">{{ summary.free_shipping_remaining|euro }}</span> tot gratis verzending</p>
+            <div class="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div class="h-full rounded-full bg-gold-500" style="width: {{ summary.free_shipping_progress }}%"></div>
+            </div>
+          </div>
+        {% else %}
+          <p class="mb-5 flex items-center gap-2 rounded-2xl bg-emerald-400/5 p-4 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/15">
+            {{ icon('check', 'h-4 w-4') }} Je bestelling wordt gratis verzonden
+          </p>
+        {% endif %}
+
+        {{ totals(summary.subtotal, summary.shipping, summary.total) }}
+
+        <a href="{{ url_for('cart.checkout') }}" class="btn-primary mt-6 w-full">
+          {{ icon('lock', 'h-4 w-4') }} Afrekenen
+        </a>
+        <p class="mt-3 text-center text-xs text-zinc-500">
+          {% if current_user.is_authenticated %}Je rekent af als {{ current_user.email }}{% else %}Je logt in of maakt een account aan bij het afrekenen{% endif %}
+        </p>
+        <a href="{{ url_for('shop.products') }}" class="mt-4 block text-center text-sm font-medium text-gold-400 hover:text-gold-300">Verder winkelen</a>
+      </aside>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{# Product tile used on the homepage and in the product grid. #}
+{% macro product_card(product) -%}
+<a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="group block focus:outline-none">
+  <div class="relative aspect-square overflow-hidden rounded-2xl bg-ink-900 ring-1 ring-inset ring-white/5 transition group-hover:ring-gold-500/30 group-focus-visible:ring-2 group-focus-visible:ring-gold-500 sm:rounded-3xl">
+    <img src="{{ product.image_url|image_src }}" alt="{{ product.name }}" loading="lazy"
+         class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]">
+    {% if not product.in_stock %}
+      <span class="absolute left-2.5 top-2.5 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-medium text-zinc-300 backdrop-blur">Uitverkocht</span>
+    {% endif %}
+  </div>
+  <div class="mt-3 px-0.5">
+    <p class="truncate text-[11px] uppercase tracking-wider text-zinc-500">{{ product.category_label }}</p>
+    <h3 class="mt-0.5 line-clamp-1 text-sm font-medium text-zinc-100 sm:text-base">{{ product.name }}</h3>
+    <p class="mt-1 text-sm font-semibold text-gold-400">{{ product.price|euro }}</p>
+  </div>
+</a>
+{%- endmacro %}

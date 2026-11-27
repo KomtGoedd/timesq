@@ -1,0 +1,35 @@
+{# Form helpers. Extra keyword arguments become HTML attributes on the input. #}
+{% macro field(f, hint=None, cls='') -%}
+  <div class="{{ cls }}">
+    <label for="{{ f.id }}" class="label">{{ f.label.text }}</label>
+    {{ f(class_='input' ~ (' input-error' if f.errors else ''),
+         **dict(kwargs, **({'aria-invalid': 'true', 'aria-describedby': f.id ~ '-error'} if f.errors else {}))) }}
+    {% if f.errors %}
+      <p id="{{ f.id }}-error" class="mt-1.5 text-sm text-red-300">{{ f.errors[0] }}</p>
+    {% elif hint %}
+      <p class="mt-1.5 text-xs text-zinc-500">{{ hint }}</p>
+    {% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro checkbox(f, hint=None) -%}
+  <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-ink-850 px-4 py-3.5 ring-1 ring-inset ring-white/10">
+    {{ f(class_='mt-0.5 h-5 w-5 shrink-0 rounded') }}
+    <span>
+      <span class="block text-sm font-medium text-zinc-200">{{ f.label.text }}</span>
+      {% if hint %}<span class="mt-0.5 block text-xs text-zinc-500">{{ hint }}</span>{% endif %}
+    </span>
+  </label>
+{%- endmacro %}
+
+{# Disable a submit button after the first click (prevents double orders). #}
+{% macro once_script() -%}
+  <script>
+    document.querySelectorAll('form[data-once]').forEach((form) =>
+      form.addEventListener('submit', () => {
+        const button = form.querySelector('[type=submit]');
+        if (button) { button.disabled = true; button.dataset.label && (button.textContent = button.dataset.label); }
+      })
+    );
+  </script>
+{%- endmacro %}

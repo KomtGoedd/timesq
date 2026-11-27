@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% from "partials/_order.html" import order_items, totals, address, status_tracker %}
+
+{% block title %}Bestelling {{ order.number }}{% endblock %}
+
+{% block content %}
+  <section class="mx-auto max-w-xl pt-10 text-center md:pt-16">
+    <span class="pop-in mx-auto grid h-20 w-20 place-items-center rounded-full bg-gold-500 text-ink-950 shadow-[0_0_60px_-10px] shadow-gold-500/60">
+      {{ icon('check', 'h-10 w-10') }}
+    </span>
+    <p class="eyebrow mt-8">Betaling geslaagd</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">Bedankt, {{ order.shipping_name.split()[0] }}!</h1>
+    <p class="mt-2 text-zinc-400">Je bestelling is ontvangen. We sturen hem zo snel mogelijk op.</p>
+
+    <div class="card mt-8 p-5">
+      <p class="text-xs uppercase tracking-wider text-zinc-500">Ordernummer</p>
+      <p class="mt-1 font-mono text-2xl font-semibold tracking-wider text-gold-400" data-testid="order-number">{{ order.number }}</p>
+      <p class="mt-1 text-xs text-zinc-500">{{ order.created_at|datum(true) }}</p>
+    </div>
+  </section>
+
+  <section class="mx-auto mt-6 max-w-xl space-y-6 text-left">
+    <div class="card p-5 sm:p-6">{{ status_tracker(order, order_statuses) }}</div>
+
+    <div class="card p-5 sm:p-6">
+      <h2 class="font-semibold text-white">Je bestelling</h2>
+      <div class="mt-2">{{ order_items(order) }}</div>
+      <div class="mt-3 border-t border-white/5 pt-4">{{ totals(order.subtotal, order.shipping, order.total) }}</div>
+    </div>
+
+    <div class="card p-5 sm:p-6">
+      <h2 class="mb-2 font-semibold text-white">Bezorgadres</h2>
+      {{ address(order) }}
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row">
+      <a href="{{ url_for('account.orders') }}" class="btn-primary flex-1">Mijn bestellingen</a>
+      <a href="{{ url_for('shop.products') }}" class="btn-secondary flex-1">Verder winkelen</a>
+    </div>
+  </section>
+{% endblock %}

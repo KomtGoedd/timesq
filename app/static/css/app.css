@@ -1,0 +1,100 @@
+/* Small additions on top of Tailwind: native-app details that need plain CSS. */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  color-scheme: dark;
+}
+
+/* Respect the notch / status bar when installed as an app. */
+.app-header {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Leave room for the bottom tab bar (+ the iPhone home indicator). */
+.app-main {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+}
+.tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@media (min-width: 768px) {
+  .app-main {
+    padding-bottom: 0;
+  }
+}
+
+/* Sticky search/filter bar sits right below the top bar (3.5rem, 4rem from md). */
+.filter-bar {
+  top: calc(env(safe-area-inset-top) + 3.5rem);
+}
+@media (min-width: 768px) {
+  .filter-bar {
+    top: 4rem;
+  }
+}
+
+/* Horizontally scrolling chip rows without a visible scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Toasts slide in just below the top bar. */
+.toasts {
+  top: calc(env(safe-area-inset-top) + 4.25rem);
+}
+.toast {
+  animation: toast-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.toast.is-leaving {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+/* Gentle float on the hero watch. */
+.hero-image {
+  animation: float 7s ease-in-out infinite;
+}
+@keyframes float {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+input[type="checkbox"] {
+  accent-color: #c9a227;
+}
+
+/* Success check on the order confirmation page. */
+.pop-in {
+  animation: pop-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #c9a227;
+  outline-offset: 2px;
+}

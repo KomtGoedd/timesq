@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+
+{% block title %}Mijn account{% endblock %}
+
+{% block content %}
+  <section class="mx-auto max-w-xl pt-8 md:pt-12">
+    <div class="flex items-center gap-4">
+      <span class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-300 to-gold-600 text-2xl font-semibold text-ink-950">
+        {{ current_user.name[:1]|upper }}
+      </span>
+      <div class="min-w-0">
+        <h1 class="truncate text-2xl font-semibold tracking-tight text-white">{{ current_user.name }}</h1>
+        <p class="truncate text-sm text-zinc-400">{{ current_user.email }}</p>
+      </div>
+    </div>
+
+    {# Grouped list, like the settings screen of a phone. #}
+    <h2 class="mb-2 ml-5 mt-8 text-xs font-semibold uppercase tracking-wider text-zinc-500">Winkelen</h2>
+    <div class="list-group">
+      <a href="{{ url_for('account.orders') }}" class="list-row">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-gold-500/10 text-gold-400">{{ icon('box', 'h-5 w-5') }}</span>
+        <span class="flex-1 font-medium text-white">Mijn bestellingen</span>
+        <span class="text-zinc-500">{{ current_user.orders|length }}</span>
+        <span class="text-zinc-600">{{ icon('chevron-right', 'h-5 w-5') }}</span>
+      </a>
+      <a href="{{ url_for('cart.view_cart') }}" class="list-row">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-gold-500/10 text-gold-400">{{ icon('bag', 'h-5 w-5') }}</span>
+        <span class="flex-1 font-medium text-white">Winkelmand</span>
+        <span class="text-zinc-500">{{ cart_count }}</span>
+        <span class="text-zinc-600">{{ icon('chevron-right', 'h-5 w-5') }}</span>
+      </a>
+    </div>
+
+    {% if current_user.is_admin %}
+      <h2 class="mb-2 ml-5 mt-8 text-xs font-semibold uppercase tracking-wider text-zinc-500">Beheer</h2>
+      <div class="list-group">
+        <a href="{{ url_for('admin.orders') }}" class="list-row">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-gold-500/10 text-gold-400">{{ icon('inbox', 'h-5 w-5') }}</span>
+          <span class="flex-1 font-medium text-white">Bestellingen beheren</span>
+          <span class="text-zinc-600">{{ icon('chevron-right', 'h-5 w-5') }}</span>
+        </a>
+        <a href="{{ url_for('admin.products') }}" class="list-row">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-gold-500/10 text-gold-400">{{ icon('sliders', 'h-5 w-5') }}</span>
+          <span class="flex-1 font-medium text-white">Producten beheren</span>
+          <span class="text-zinc-600">{{ icon('chevron-right', 'h-5 w-5') }}</span>
+        </a>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('auth.logout') }}" class="mt-8">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="list-group">
+        <button type="submit" class="list-row text-red-300">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-red-500/10">{{ icon('logout', 'h-5 w-5') }}</span>
+          <span class="flex-1 font-medium">Uitloggen</span>
+        </button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

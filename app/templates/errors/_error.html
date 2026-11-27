@@ -1,0 +1,14 @@
+{# Shared layout for error pages (403 / 404 / 500). #}
+{% extends "base.html" %}
+{% block title %}{{ error_title }}{% endblock %}
+{% block content %}
+  <section class="mx-auto mt-16 max-w-md text-center md:mt-24">
+    <p class="bg-gradient-to-b from-gold-300 to-gold-600 bg-clip-text text-7xl font-semibold tracking-tight text-transparent sm:text-8xl">{{ error_code }}</p>
+    <h1 class="mt-5 text-2xl font-semibold text-white">{{ error_title }}</h1>
+    <p class="mt-2 text-zinc-400">{{ error_text }}</p>
+    <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+      <a href="{{ url_for('shop.home') }}" class="btn-primary">Naar de homepage</a>
+      <a href="{{ url_for('shop.products') }}" class="btn-secondary">Bekijk producten</a>
+    </div>
+  </section>
+{% endblock %}

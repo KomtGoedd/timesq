@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% from "partials/_product_card.html" import product_card %}
+
+{% set page_title = active_category.label if active_category else "Alle producten" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{# Pill-shaped filter chip; active chips are gold. #}
+{% macro chip(label, href, active) -%}
+  <a href="{{ href }}"
+     class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[.97] {{ 'bg-gold-500 text-ink-950' if active else 'bg-ink-850 text-zinc-300 ring-1 ring-inset ring-white/5 hover:text-white' }}"
+     {% if active %}aria-current="true"{% endif %}>{{ label }}</a>
+{%- endmacro %}
+
+{% block content %}
+  <header class="pt-6 md:pt-10">
+    <p class="eyebrow">Shop</p>
+    <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-white md:text-4xl">{{ page_title }}</h1>
+    {% if active_category %}<p class="mt-1 text-sm text-zinc-500">{{ active_category.tagline }}</p>{% endif %}
+  </header>
+
+  {# ---- Search + filters (sticks below the top bar while scrolling) ------- #}
+  <div class="filter-bar sticky z-30 -mx-4 mt-5 bg-ink-950/90 px-4 pb-3 pt-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <form id="zoeken" role="search" method="get" action="{{ url_for('shop.products') }}">
+      {% if category %}<input type="hidden" name="categorie" value="{{ category }}">{% endif %}
+      {% if price %}<input type="hidden" name="prijs" value="{{ price }}">{% endif %}
+      <label class="relative block">
+        <span class="sr-only">Zoek op productnaam</span>
+        <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-zinc-500">{{ icon('search', 'h-5 w-5') }}</span>
+        <input type="search" name="q" value="{{ search }}" maxlength="{{ max_search_length }}"
+               placeholder="Zoek op productnaam…" enterkeyhint="search" autocomplete="off"
+               class="w-full rounded-full bg-ink-850 py-3 pl-12 pr-4 text-[15px] text-white ring-1 ring-inset ring-white/5 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-gold-500">
+      </label>
+    </form>
+
+    <div class="no-scrollbar -mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Filters">
+      {{ chip("Alles", url_with(categorie=None), not category) }}
+      {% for cat in categories %}
+        {{ chip(cat.label, url_with(categorie=cat.slug), category == cat.slug) }}
+      {% endfor %}
+      <span class="mx-1 h-6 w-px shrink-0 bg-white/10" aria-hidden="true"></span>
+      {% for key, (label, _min, _max) in price_ranges.items() %}
+        {# Tapping the active price chip again removes that filter. #}
+        {{ chip(label, url_with(prijs=None if price == key else key), price == key) }}
+      {% endfor %}
+    </div>
+  </div>
+
+  {# ---- Result count + sorting -------------------------------------------- #}
+  <div class="mt-3 flex items-center justify-between gap-4">
+    <p class="text-sm text-zinc-400" aria-live="polite">
+      {{ products|length }} {{ "product" if products|length == 1 else "producten" }}
+      {% if search %}
+        voor <span class="text-white">“{{ search }}”</span>
+        <a href="{{ url_with(q=None) }}" class="ml-1 text-gold-400 hover:text-gold-300">Wis</a>
+      {% endif %}
+    </p>
+    <label class="relative flex items-center gap-2 text-sm text-zinc-400">
+      <span class="hidden sm:inline">Sorteren:</span>
+      <select name="sort" form="zoeken" data-autosubmit aria-label="Sorteren"
+              class="appearance-none rounded-full bg-ink-850 py-2 pl-4 pr-9 text-sm font-medium text-white ring-1 ring-inset ring-white/5 focus:outline-none focus:ring-2 focus:ring-gold-500">
+        {% for key, (label, _order) in sort_options.items() %}
+          <option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <span class="pointer-events-none absolute right-3 rotate-90 text-zinc-400">{{ icon('chevron-right', 'h-4 w-4') }}</span>
+    </label>
+    <noscript><button type="submit" form="zoeken" class="btn-secondary py-2">Toepassen</button></noscript>
+  </div>
+
+  {# ---- Grid --------------------------------------------------------------- #}
+  {% if products %}
+    <div class="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4">
+      {% for product in products %}{{ product_card(product) }}{% endfor %}
+    </div>
+  {% else %}
+    <div class="card mx-auto mt-8 max-w-md p-8 text-center">
+      <span class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-gold-500/10 text-gold-400">{{ icon('search', 'h-5 w-5') }}</span>
+      <h2 class="mt-4 font-semibold text-white">Geen producten gevonden</h2>
+      <p class="mt-1 text-sm text-zinc-400">Probeer een andere zoekterm of verwijder een filter.</p>
+      <a href="{{ url_for('shop.products') }}" class="btn-primary mt-6">Alle filters wissen</a>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    // Re-run the search as soon as a different sort order is picked.
+    document.querySelectorAll('[data-autosubmit]').forEach((el) =>
+      el.addEventListener('change', () => el.form.submit())
+    );
+    // Keep the active category chip visible in the horizontally scrolling row.
+    const activeChip = document.querySelector('[aria-label="Filters"] [aria-current="true"]');
+    if (activeChip) activeChip.parentElement.scrollLeft = activeChip.offsetLeft - 16;
+    // The search icon in the top bar links to #zoeken: focus the field.
+    if (location.hash === '#zoeken') document.querySelector('#zoeken input[name=q]')?.focus();
+  </script>
+{% endblock %}

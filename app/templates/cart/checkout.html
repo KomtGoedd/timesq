@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% from "partials/_forms.html" import field, once_script %}
+{% from "partials/_order.html" import totals %}
+
+{% block title %}Afrekenen{% endblock %}
+
+{% block content %}
+  <nav class="pt-3 md:pt-8">
+    <a href="{{ url_for('cart.view_cart') }}" class="-ml-2 inline-flex items-center gap-1 rounded-full py-2 pl-1 pr-3 text-sm font-medium text-gold-400 active:bg-white/5">
+      {{ icon('chevron-left', 'h-5 w-5') }} Winkelmand
+    </a>
+  </nav>
+  <header class="pt-2">
+    <p class="eyebrow">Afrekenen</p>
+    <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-white md:text-4xl">Bezorgen en betalen</h1>
+  </header>
+
+  <form method="post" novalidate data-once class="mt-6 grid gap-6 md:grid-cols-[1fr_360px] md:gap-10">
+    {{ form.hidden_tag() }}
+
+    <div class="space-y-6">
+      {# ---- Address ------------------------------------------------------------- #}
+      <section class="card p-5 sm:p-6" aria-labelledby="adres">
+        <h2 id="adres" class="flex items-center gap-2 font-semibold text-white">{{ icon('pin', 'h-5 w-5 text-gold-400') }} Bezorgadres</h2>
+        <div class="mt-5 space-y-4">
+          {{ field(form.name, autocomplete='name') }}
+          {{ field(form.street, autocomplete='street-address', placeholder='Keizersgracht 123') }}
+          <div class="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3">
+            {{ field(form.postal_code, autocomplete='postal-code', placeholder='1234 AB', maxlength=7) }}
+            {{ field(form.city, autocomplete='address-level2', placeholder='Amsterdam') }}
+          </div>
+        </div>
+      </section>
+
+      {# ---- Payment (simulated) ----------------------------------------------------- #}
+      <section class="card p-5 sm:p-6" aria-labelledby="betalen">
+        <h2 id="betalen" class="flex items-center gap-2 font-semibold text-white">{{ icon('lock', 'h-5 w-5 text-gold-400') }} Betalen</h2>
+        <div class="mt-4 flex items-center gap-3 rounded-2xl bg-ink-850 px-4 py-3.5 ring-2 ring-inset ring-gold-500">
+          <span class="grid h-8 w-11 place-items-center rounded-md bg-white text-[11px] font-bold text-[#CC0066]">iDEAL</span>
+          <span class="flex-1 text-sm font-medium text-white">iDEAL</span>
+          <span class="grid h-5 w-5 place-items-center rounded-full bg-gold-500 text-ink-950">{{ icon('check', 'h-3 w-3') }}</span>
+        </div>
+        <p class="mt-3 text-xs text-zinc-500">Demo-omgeving: de betaling wordt gesimuleerd, er wordt niets afgeschreven.</p>
+      </section>
+    </div>
+
+    {# ---- Summary ------------------------------------------------------------------ #}
+    <aside class="card h-fit p-6 md:sticky md:top-24" aria-label="Je bestelling">
+      <h2 class="font-semibold text-white">Je bestelling</h2>
+      <ul class="mt-4 divide-y divide-white/5">
+        {% for line in summary.lines %}
+          <li class="flex items-center gap-3 py-3">
+            <span class="relative shrink-0">
+              <img src="{{ line.product.image_url|image_src }}" alt="" class="h-12 w-12 rounded-xl bg-ink-850 object-cover">
+              <span class="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-zinc-200 px-1 text-[10px] font-bold text-ink-950">{{ line.quantity }}</span>
+            </span>
+            <span class="min-w-0 flex-1 truncate text-sm text-zinc-200">{{ line.product.name }}</span>
+            <span class="text-sm text-zinc-300">{{ line.line_total|euro }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="mt-4 border-t border-white/5 pt-4">
+        {{ totals(summary.subtotal, summary.shipping, summary.total) }}
+      </div>
+      <button type="submit" class="btn-primary mt-6 w-full" data-label="Bezig met betalen…">
+        {{ icon('lock', 'h-4 w-4') }} Betaal {{ summary.total|euro }}
+      </button>
+      <p class="mt-3 text-center text-xs text-zinc-500">Door te betalen ga je akkoord met onze voorwaarden.</p>
+    </aside>
+  </form>
+{% endblock %}
+
+{% block scripts %}{{ once_script() }}{% endblock %}

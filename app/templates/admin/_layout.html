@@ -1,0 +1,24 @@
+{# Layout for all admin pages: title plus a segmented control to switch sections. #}
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4 pt-6 md:pt-10">
+    <div>
+      <p class="eyebrow">Beheer</p>
+      <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-white">{% block admin_title %}{% endblock %}</h1>
+    </div>
+    {% block admin_actions %}{% endblock %}
+  </div>
+
+  <nav class="mt-5 inline-flex rounded-full bg-ink-850 p-1 ring-1 ring-inset ring-white/5" aria-label="Beheer">
+    {# (endpoint, label, prefix that marks the tab active: list, detail and form pages) #}
+    {% for endpoint, label, prefix in [('admin.orders', 'Bestellingen', 'admin.order'), ('admin.products', 'Producten', 'admin.product')] %}
+      {% set active = request.endpoint.startswith(prefix) %}
+      <a href="{{ url_for(endpoint) }}"
+         class="rounded-full px-5 py-2 text-sm font-medium transition {{ 'bg-gold-500 text-ink-950' if active else 'text-zinc-400 hover:text-white' }}"
+         {% if active %}aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  <div class="mt-6">{% block admin_content %}{% endblock %}</div>
+{% endblock %}
